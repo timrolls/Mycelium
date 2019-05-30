@@ -1,6 +1,6 @@
 /*
-    SPORE FIRMWARE
-    Copyright (C) 2018 PWRFL
+    MYCELIUM FIRMWARE
+    Copyright (C) 2019
 
     @authors Tim Rolls, and Brendan Matkin
 
@@ -29,9 +29,13 @@
    Upload Speed: 230400   --this works consistentnly with classic FTDI. Newer chips may work at 921600
 */
 
+/*
+   Use ArduinoJson ver 5
+*/
+
 
 extern "C" {
-  #include "user_interface.h"           // allows wifi_set_sleep_type
+#include "user_interface.h"           // allows wifi_set_sleep_type
 }
 
 #include "settings.h"                   // local settings!
@@ -64,12 +68,12 @@ WiFiUDP udp;
 /******** MISC *********/
 
 void fadeAll(uint8_t darkenBy) {
-    RgbColor col;
-    for (uint16_t i = 0; i < pixels.PixelCount(); i++) {
-        col = pixels.GetPixelColor(i);
-        col.Darken(darkenBy);
-        pixels.SetPixelColor(i, col);
-    }
+  RgbColor col;
+  for (uint16_t i = 0; i < pixels.PixelCount(); i++) {
+    col = pixels.GetPixelColor(i);
+    col.Darken(darkenBy);
+    pixels.SetPixelColor(i, col);
+  }
 }
 
 
@@ -91,7 +95,7 @@ void setup() {
   address = EEPROM.read(0);
   deviceName.concat(address);
   for (int i = 0; i < 4; i++) {
-    serverIP[i] = EEPROM[i+1];    // + 1 because "address" is stored at 0
+    serverIP[i] = EEPROM[i + 1];  // + 1 because "address" is stored at 0
   }
   //currentMode = (Mode)EEPROM[5];    // see bottom of setup()
 
@@ -172,51 +176,51 @@ void loop() {
   }
 
 
-  switch(currentMode) {
+  switch (currentMode) {
     case TEST: {
-      if (e131.parsePacket()) {
-        // always parse udp data to avoid buffer overflows and subsequent random crashing
+        if (e131.parsePacket()) {
+          // always parse udp data to avoid buffer overflows and subsequent random crashing
+        }
+        static uint32_t testTimer;
+        if (millis() - testTimer > 12) {
+          testStepper++;
+          testTimer = millis();
+          pixels.RotateLeft(1);
+        }
+        uint8_t _step = testStepper;
+        for (int i = 0; i < PixelCount; i++) {
+          HsbColor col = HsbColor(0.6, 0.30, cubicwave8( _step + i * 5 ) / 255.0f); // pulse with a blink (as testStepper rolls over)
+          pixels.SetPixelColor(i, col);
+        }
+
+        pixels.Show();
+        break;
       }
-      static uint32_t testTimer;
-      if (millis() - testTimer > 12) {
-        testStepper++;
-        testTimer = millis();
-        pixels.RotateLeft(1);
-      }
-      uint8_t _step = testStepper;
-      for (int i = 0; i < PixelCount; i++) {
-        HsbColor col = HsbColor(0.6, 0.30, cubicwave8( _step+i*5 )/255.0f);      // pulse with a blink (as testStepper rolls over)
-        pixels.SetPixelColor(i, col);
-      }
-      
-      pixels.Show();
-      break;
-    }
-    
+
     case SLEEP: {   // for now this is blackout!
-      if (e131.parsePacket()) {
-        // always parse udp data to avoid buffer overflows and subsequent random crashing
-      }
-      RgbColor col = RgbColor(0, 0, 0);
+        if (e131.parsePacket()) {
+          // always parse udp data to avoid buffer overflows and subsequent random crashing
+        }
+        RgbColor col = RgbColor(0, 0, 0);
         for (int i = 0; i < PixelCount; i++) {
           pixels.SetPixelColor(i, col);
         }
-      pixels.Show();
-      break;
-    }
-    
+        pixels.Show();
+        break;
+      }
+
     case NORMAL:    // for now these all do the same thing!
-    default:
+    default:{
       /* sACN receive: */
       static uint32_t receiveTimer;
       static uint32_t fadeTimer;
       if (millis() - receiveTimer > receiveTimeout) {       // if we havent received a packet for <receiveTimeout>ms, then fade to black
         if (millis() - fadeTimer > 6) {                     // 5 is the fade speed - lower number ot fade out faster
           fadeAll(1);
-          fadeTimer = millis(); 
+          fadeTimer = millis();
         }
       }
-      
+
       if (e131.parsePacket()) {
         receiveTimer = millis();
         /* NOTE: ADDRESSES SHOULD PROBABLY START AT 0 IF WE ARE NOT DERIVING THEM FROM OR ASSIGNING THEM TO IP ADDRESSES */
@@ -229,8 +233,23 @@ void loop() {
         }
         digitalWrite(LED_BUILTIN, HIGH);            // (low is on)
       }
+
+      /* Photoresistor input */
+      int val = analogRead(0);                     // Read voltage value ranging from 0 -1023
+      if (val > 800) {                          // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
+        Serial.println(val);                     // print voltage value on serial monitor
+        RgbColor white = RgbColor(255, 255, 255);
+        for (int i = 0; i < PixelCount; i++) {
+          pixels.SetPixelColor(i, white);
+        }
+        //pixels.Show();
+      }
+
       pixels.Show();
-      break; 
+      break;
+
+    }
+
   }
 
 
@@ -252,7 +271,7 @@ void loop() {
   /* battery voltage: */
   static float vRaw;
   static uint32_t analogReadTimer;
-  if (millis() - analogReadTimer > 1000) {       // 200 = 5 per second. can't analogRead too fast or wifi disconnects. 
+  if (millis() - analogReadTimer > 1000) {       // 200 = 5 per second. can't analogRead too fast or wifi disconnects.
     vRaw = analogRead(A0);
     vRaw = (vRaw / 1023.0f) * 5.31;             // 5.31 is the calibration value for the new voltage divider (range goes below 0) May vary with resistor tolerance..
     delay(3);                                   // this delay HAS to be here. No Flickers! (Thanks to DMA)
@@ -264,7 +283,7 @@ void loop() {
     webSocket.sendTXT(battJSON);        // send to server
     analogReadTimer = millis();
   }
-  
+
 
 
   /* Handle OTA FIRMARE updates: */
