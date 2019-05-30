@@ -210,7 +210,7 @@ void loop() {
       }
 
     case NORMAL:    // for now these all do the same thing!
-    default:{
+    default:
       /* sACN receive: */
       static uint32_t receiveTimer;
       static uint32_t fadeTimer;
@@ -222,6 +222,7 @@ void loop() {
       }
 
       if (e131.parsePacket()) {
+        Serial.println("sACN packet received!");
         receiveTimer = millis();
         /* NOTE: ADDRESSES SHOULD PROBABLY START AT 0 IF WE ARE NOT DERIVING THEM FROM OR ASSIGNING THEM TO IP ADDRESSES */
         uint8_t r = e131.data[address * CHAN_PER_FIXTURE];         // address starts at 0
@@ -234,22 +235,22 @@ void loop() {
         digitalWrite(LED_BUILTIN, HIGH);            // (low is on)
       }
 
-      /* Photoresistor input */
-      int val = analogRead(0);                     // Read voltage value ranging from 0 -1023
-      if (val > 800) {                          // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
-        Serial.println(val);                     // print voltage value on serial monitor
-        RgbColor white = RgbColor(255, 255, 255);
-        for (int i = 0; i < PixelCount; i++) {
-          pixels.SetPixelColor(i, white);
-        }
-        //pixels.Show();
-      }
-
       pixels.Show();
       break;
+  }
 
+  /* Photoresistor input */
+  if ((millis() % analogDelay) == 0) {        //reduce polling - constant Analog polling breaks wifi
+    int val = analogRead(A0);                 // Read voltage value ranging from 0 -1023
+    delay(3); 
+    if (val > analogThreshold) {              // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
+      Serial.println(val);                    // print voltage value on serial monitor
+      RgbColor white = RgbColor(255, 255, 255);
+      for (int i = 0; i < PixelCount; i++) {
+        pixels.SetPixelColor(i, white);
+      }
+      pixels.Show();
     }
-
   }
 
 

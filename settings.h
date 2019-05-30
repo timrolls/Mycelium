@@ -49,6 +49,9 @@ enum Mode : uint8_t {
 };
 volatile Mode currentMode;
 
+/* -- Input Settings -- */
+int analogDelay = 20;                   // time between polling analog sensor - constant polling breaks wifi
+int analogThreshold = 800;              // value to trigger based on input
 
 /* -- OTA firmware global settings -- */
 bool checkForFW = false;
