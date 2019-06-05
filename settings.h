@@ -25,6 +25,8 @@ String deviceName    = "Spore_";          // used for DHCP
 IPAddress serverIP(10, 10, 10, 100);      // server IP address
 uint16_t wsPort      = 8080;              // websocket connection port
 uint16_t oscPort = 7777;                  // osc listen port to receive server config broadcast
+const unsigned int oscOutPort = 9999;          // remote port to receive OSC
+
 
 
 /* -- firmware settings -- */
@@ -50,8 +52,8 @@ enum Mode : uint8_t {
 volatile Mode currentMode;
 
 /* -- Input Settings -- */
-int analogDelay = 20;                   // time between polling analog sensor - constant polling breaks wifi
-int analogThreshold = 800;              // value to trigger based on input
+int analogDelay = 300;                   // time between polling analog sensor - constant polling breaks wifi
+int analogThreshold = 900;              // value to trigger based on input
 
 /* -- OTA firmware global settings -- */
 bool checkForFW = false;

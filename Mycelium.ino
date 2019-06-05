@@ -222,7 +222,7 @@ void loop() {
       }
 
       if (e131.parsePacket()) {
-        Serial.println("sACN packet received!");
+        //Serial.println("sACN packet received!");
         receiveTimer = millis();
         /* NOTE: ADDRESSES SHOULD PROBABLY START AT 0 IF WE ARE NOT DERIVING THEM FROM OR ASSIGNING THEM TO IP ADDRESSES */
         uint8_t r = e131.data[address * CHAN_PER_FIXTURE];         // address starts at 0
@@ -242,14 +242,23 @@ void loop() {
   /* Photoresistor input */
   if ((millis() % analogDelay) == 0) {        //reduce polling - constant Analog polling breaks wifi
     int val = analogRead(A0);                 // Read voltage value ranging from 0 -1023
-    delay(3); 
+    delay(3);
     if (val > analogThreshold) {              // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
       Serial.println(val);                    // print voltage value on serial monitor
-      RgbColor white = RgbColor(255, 255, 255);
-      for (int i = 0; i < PixelCount; i++) {
-        pixels.SetPixelColor(i, white);
-      }
-      pixels.Show();
+
+      //            RgbColor white = RgbColor(255, 255, 255);
+      //            for (int i = 0; i < PixelCount; i++) {
+      //              pixels.SetPixelColor(i, white);
+      //            }
+      //            pixels.Show();
+
+      OSCMessage msg("/trigger");
+      int randomNum = random(100);
+      msg.add(randomNum); // TODO: replace with address when testing at scale
+      udp.beginPacket(serverIP, oscOutPort);
+      msg.send(udp);
+      udp.endPacket();
+      msg.empty();
     }
   }
 
