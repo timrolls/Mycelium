@@ -221,6 +221,33 @@ void loop() {
         }
       }
 
+
+      /* Photoresistor input */
+      if ((millis() % analogDelay) == 0) {        //reduce polling - constant Analog polling breaks wifi
+
+        RgbColor col = RgbColor(0, 0, 0);         //Turn LEDs off to help with feedback loops
+        for (int i = 0; i < PixelCount; i++) {
+          pixels.SetPixelColor(i, col);
+        }
+        pixels.Show();
+
+
+        int val = analogRead(A0);                 // Read voltage value ranging from 0 -1023
+        delay(3);                                 
+        if (val > analogThreshold) {              // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
+          Serial.println(val);                    // print voltage value on serial monitor
+
+          OSCMessage msg("/trigger");
+          int randomNum = random(100);
+          msg.add(randomNum); // TODO: replace with address when testing at scale
+          udp.beginPacket(serverIP, oscOutPort);
+          msg.send(udp);
+          udp.endPacket();
+          msg.empty();
+        }
+      }
+
+      /* sACN output */
       if (e131.parsePacket()) {
         //Serial.println("sACN packet received!");
         receiveTimer = millis();
@@ -239,28 +266,7 @@ void loop() {
       break;
   }
 
-  /* Photoresistor input */
-  if ((millis() % analogDelay) == 0) {        //reduce polling - constant Analog polling breaks wifi
-    int val = analogRead(A0);                 // Read voltage value ranging from 0 -1023
-    delay(3);
-    if (val > analogThreshold) {              // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
-      Serial.println(val);                    // print voltage value on serial monitor
 
-      //            RgbColor white = RgbColor(255, 255, 255);
-      //            for (int i = 0; i < PixelCount; i++) {
-      //              pixels.SetPixelColor(i, white);
-      //            }
-      //            pixels.Show();
-
-      OSCMessage msg("/trigger");
-      int randomNum = random(100);
-      msg.add(randomNum); // TODO: replace with address when testing at scale
-      udp.beginPacket(serverIP, oscOutPort);
-      msg.send(udp);
-      udp.endPacket();
-      msg.empty();
-    }
-  }
 
 
   /* OSC receive (for server config): */
