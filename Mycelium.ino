@@ -236,13 +236,13 @@ void loop() {
 
         //invert second half
         HsbColor hCol = HsbColor(col);
-        float hue = hCol.H + 0.5f; // opposite color on the wheel(normalized 0-1)
-        Serial.println(hue);
+        float hue = hCol.H + 0.1f; // opposite color on the wheel(normalized 0-1)
+        //Serial.println(hue);
         if (hue > 1.0f) {
           hue -= 1.0f;
         }
-        float saturation= hCol.S;
-        float brightness= hCol.B;
+        float saturation = hCol.S;
+        float brightness = hCol.B;
         HsbColor hColOut = HsbColor(hue, saturation , brightness);
 
         for (int i = PixelCount / 2; i < PixelCount; i++) {
@@ -261,13 +261,15 @@ void loop() {
   if ((millis() % analogDelay) == 0) {        //reduce polling - constant Analog polling breaks wifi
 
     int val = analogRead(A0);                 // Read voltage value ranging from 0 -1023
+    Serial.println(val);                    // print voltage value on serial monitor
+
     delay(3);
-    if (val > analogThreshold) {              // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
-      //Serial.println(val);                    // print voltage value on serial monitor
+    if (val < analogThreshold) {   //TODO:adjust threshold           // Over threshold, turn LEDs white TODO: Make this threshold adjustable over OSC
 
       OSCMessage msg("/trigger");
       int randomNum = random(50);
-      msg.add(randomNum); // TODO: replace with address when testing at scale
+//      msg.add(randomNum); // TODO: replace with address when testing at scale
+      msg.add(address); 
       udp.beginPacket(serverIP, oscOutPort);
       msg.send(udp);
       udp.endPacket();

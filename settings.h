@@ -53,7 +53,7 @@ volatile Mode currentMode;
 
 /* -- Input Settings -- */
 int analogDelay = 300;                   // time between polling analog sensor - constant polling breaks wifi
-int analogThreshold = 900;              // value to trigger based on input
+int analogThreshold = 100;              // value to trigger based on input
 
 /* -- OTA firmware global settings -- */
 bool checkForFW = false;
