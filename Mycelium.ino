@@ -268,7 +268,7 @@ void loop() {
 
       OSCMessage msg("/trigger");
       int randomNum = random(50);
-//      msg.add(randomNum); // TODO: replace with address when testing at scale
+      //msg.add(randomNum); // TODO: replace with address when testing at scale
       msg.add(address); 
       udp.beginPacket(serverIP, oscOutPort);
       msg.send(udp);

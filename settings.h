@@ -32,7 +32,7 @@ const unsigned int oscOutPort = 9999;          // remote port to receive OSC
 /* -- firmware settings -- */
 #define HW_VERSION "1.0.0"
 #define HW_PHASE   ""
-const int FW_VERSION = 308;              // 0.3.00, convention: 1.2.10 = 1210, 0.5.9 = 509, no leading 0s or it is interpreted as octal.. learned that the hard way!
+const int FW_VERSION = 312;              // 0.3.00, convention: 1.2.10 = 1210, 0.5.9 = 509, no leading 0s or it is interpreted as octal.. learned that the hard way!
 #define FW_PHASE   "-beta"
 //float fwCheckButtonTime = 2000.0f;     // how long to hold button down.
 
@@ -53,7 +53,7 @@ volatile Mode currentMode;
 
 /* -- Input Settings -- */
 int analogDelay = 300;                   // time between polling analog sensor - constant polling breaks wifi
-int analogThreshold = 100;              // value to trigger based on input
+int analogThreshold = 800;              // value to trigger based on input
 
 /* -- OTA firmware global settings -- */
 bool checkForFW = false;
